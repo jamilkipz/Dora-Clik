@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naikkan Level - Bird Money</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(to bottom, #4A0080, #7B00D3);
+            min-height: 100vh;
+            font-family: sans-serif;
+        }
+        .card-container {
+            background-color: #E5E7EB;
+            border-radius: 2rem;
+        }
+        .btn-calculation {
+            background: linear-gradient(to bottom, #FFF4D2, #FFD700);
+            border: 1px solid #B8860B;
+            color: #8B4513;
+        }
+        .payment-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .payment-item:active { transform: scale(0.95); background-color: #f3f4f6; }
+        @keyframes custom-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-slow-spin { animation: custom-spin 1.5s linear infinite; }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/80 z-[100] flex flex-col items-center justify-center hidden">
+        <div class="relative flex items-center justify-center">
+            <div class="w-20 h-20 border-4 border-white/20 border-t-orange-500 rounded-full animate-spin"></div>
+            <i class="fas fa-circle-notch absolute text-white text-3xl animate-slow-spin"></i>
+        </div>
+        <h2 id="loadingTitle" class="text-white text-xl font-bold mt-6">Mohon Tunggu!</h2>
+        <p id="loadingSub" class="text-gray-300 text-sm mt-2">Sedang Menyiapkan Pembayaran...</p>
+    </div>
+
+    <!-- Invoice Screen -->
+    <div id="invoiceScreen" class="fixed inset-0 bg-white z-[90] hidden overflow-y-auto">
+        <div class="p-6">
+            <div class="flex items-center gap-4 mb-8">
+                <button onclick="location.reload()" class="text-gray-800 text-xl"><i class="fas fa-times"></i></button>
+                <h2 class="text-xl font-bold text-gray-800">Menunggu Pembayaran</h2>
+            </div>
+
+            <div class="text-center mb-8">
+                <p class="text-gray-500 font-medium mb-1">Total Bayar</p>
+                <h3 id="finalTotal" class="text-3xl font-black text-orange-600">Rp0</h3>
+            </div>
+
+            <div class="bg-orange-50 rounded-2xl p-4 flex items-center justify-between mb-6 border border-orange-100">
+                <div class="flex items-center gap-3">
+                    <i class="far fa-clock text-orange-500 text-xl"></i>
+                    <span class="text-orange-900 font-bold">Waktu Tersisa</span>
+                </div>
+                <div id="timer" class="text-orange-600 font-black text-lg tabular-nums">23:59:59</div>
+            </div>
+
+            <div class="space-y-4 mb-8 text-sm">
+                <div class="flex justify-between border-b pb-3">
+                    <span class="text-gray-500">Metode Pembayaran</span>
+                    <span id="finalMethod" class="font-bold text-gray-800 uppercase">DANA</span>
+                </div>
+                <div class="flex justify-between border-b pb-3">
+                    <span class="text-gray-500">Atas Nama</span>
+                    <span class="font-bold text-gray-800">BIRD MONEY APP</span>
+                </div>
+            </div>
+
+            <div class="flex justify-center mb-8">
+                <div class="bg-gray-100 w-48 h-48 rounded-2xl flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <img src="https://i.ibb.co.com/0RdnV5Xp/download-2.png" alt="QR Code Pembayaran" class="w-full h-full object-contain">
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="lihatCaraBayar()" class="w-full bg-white text-orange-500 border-2 border-orange-500 font-bold py-4 rounded-2xl active:scale-95 transition">
+                    Lihat Cara Bayarnya
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex items-center justify-between mb-6">
+        <button onclick="window.location.href='home.html'" class="bg-orange-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="text-white text-xl font-bold">Naikkan Level</h1>
+        <button class="bg-orange-400 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+            <i class="fas fa-file-alt"></i>
+        </button>
+    </div>
+
+    <!-- Container Dinamis untuk Paket Tier -->
+    <div id="tier-container" class="space-y-6 pb-10">
+        <div class="text-center text-white p-10">
+            <i class="fas fa-spinner fa-spin text-3xl"></i>
+            <p class="mt-2">Memuat paket...</p>
+        </div>
+    </div>
+
+    <!-- Modal Pembayaran (Metode) -->
+    <div id="paymentModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white w-full max-w-sm rounded-[3rem] overflow-hidden shadow-2xl transition-all transform">
+            <div id="modalHeader" class="py-5 text-center text-white font-bold text-lg shadow-md">Pilih metode pembayaran</div>
+            <div class="p-6">
+                <div id="modalSubCard" class="border-2 rounded-3xl p-4 flex items-center gap-4 mb-6">
+                    <div id="modalIcon" class="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg border-4 border-white/30"><i class="fas fa-dove text-2xl"></i></div>
+                    <div>
+                        <p class="text-gray-500 font-bold text-sm" id="modalLevelLabel">Level Rajawali</p>
+                        <p class="text-2xl font-black text-gray-800" id="modalLevelPrice">Rp 35.000</p>
+                    </div>
+                </div>
+                <h3 class="text-center font-bold text-gray-600 mb-6 text-sm">PILIH METODE PEMBAYARAN</h3>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div onclick="showPaymentList('ewalletList')" class="border-2 border-gray-100 rounded-[2rem] p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-orange-400 transition active:scale-90 bg-gray-50">
+                        <div class="text-orange-500 text-2xl"><i class="fas fa-wallet"></i></div>
+                        <span class="font-bold text-gray-700 text-sm">E-Wallet</span>
+                    </div>
+                    <div onclick="showPaymentList('mbankingList')" class="border-2 border-gray-100 rounded-[2rem] p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-orange-400 transition active:scale-90 bg-gray-50">
+                        <div class="text-orange-500 text-2xl"><i class="fas fa-university"></i></div>
+                        <span class="font-bold text-gray-700 text-sm">M-Banking</span>
+                    </div>
+                </div>
+                <!-- List E-Wallet -->
+                <div id="ewalletList" class="hidden grid grid-cols-2 gap-3 mb-6">
+                    <div class="payment-item" onclick="selectMethod('DANA')"><i class="fas fa-mobile-alt text-blue-500"></i><span class="font-bold text-xs text-gray-700">DANA</span></div>
+                    <div class="payment-item" onclick="selectMethod('GoPay')"><i class="fas fa-wallet text-green-500"></i><span class="font-bold text-xs text-gray-700">GoPay</span></div>
+                    <div class="payment-item" onclick="selectMethod('ShopeePay')"><i class="fas fa-shopping-bag text-orange-600"></i><span class="font-bold text-xs text-gray-700">ShopeePay</span></div>
+                    <div class="payment-item" onclick="selectMethod('OVO')"><i class="fas fa-th-large text-purple-700"></i><span class="font-bold text-xs text-gray-700">OVO</span></div>
+                    <div class="payment-item" onclick="selectMethod('DOKU')"><i class="fas fa-wallet text-red-500"></i><span class="font-bold text-xs text-gray-700">DOKU</span></div>
+                    <div class="payment-item" onclick="selectMethod('LinkAja')"><i class="fas fa-mobile-alt text-red-600"></i><span class="font-bold text-xs text-gray-700">LinkAja</span></div>
+                </div>
+                <!-- List M-Banking -->
+                <div id="mbankingList" class="hidden grid grid-cols-2 gap-3 mb-6 overflow-y-auto max-h-48">
+                    <div class="payment-item" onclick="selectMethod('BRImo')"><i class="fas fa-university text-blue-700"></i><span class="font-bold text-xs text-gray-700">BRImo</span></div>
+                    <div class="payment-item" onclick="selectMethod('BCA Mobile')"><i class="fas fa-university text-blue-900"></i><span class="font-bold text-xs text-gray-700">BCA Mobile</span></div>
+                    <div class="payment-item" onclick="selectMethod('BNI Mobile')"><i class="fas fa-university text-orange-700"></i><span class="font-bold text-xs text-gray-700">BNI Mobile</span></div>
+                    <div class="payment-item" onclick="selectMethod('BSI Mobile')"><i class="fas fa-university text-teal-600"></i><span class="font-bold text-xs text-gray-700">BSI Mobile</span></div>
+                    <div class="payment-item" onclick="selectMethod('SeaBank')"><i class="fas fa-university text-orange-500"></i><span class="font-bold text-xs text-gray-700">SeaBank</span></div>
+                    <div class="payment-item" onclick="selectMethod('Livin Mandiri')"><i class="fas fa-university text-blue-500"></i><span class="font-bold text-xs text-gray-700">Livin</span></div>
+                    <div class="payment-item" onclick="selectMethod('NeoBank')"><i class="fas fa-university text-yellow-500"></i><span class="font-bold text-xs text-gray-700">NeoBank</span></div>
+                </div>
+                <div id="billingSummary" class="hidden bg-gray-50 border-t border-b border-gray-200 py-4 mb-6 space-y-2">
+                    <div class="flex justify-between text-sm text-gray-600"><span>Biaya Naik Level</span><span id="billingPrice" class="font-bold">Rp35.000</span></div>
+                    <div class="flex justify-between text-sm text-gray-600"><span>Biaya Admin</span><span class="font-bold">Rp2.390</span></div>
+                    <div class="flex justify-between text-base font-black text-gray-800 pt-2 border-t border-dashed border-gray-300"><span>Total Pembayaran</span><span id="billingTotal" class="text-orange-600">Rp37.390</span></div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="tutupModal()" class="flex-1 bg-gray-100 text-gray-500 py-3 rounded-2xl font-bold active:scale-95 transition">Batal</button>
+                    <button id="modalConfirmBtn" onclick="konfirmasiBayar()" class="flex-1 text-white py-3 rounded-2xl font-bold shadow-lg active:scale-95 transition">Bayar Sekarang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script>
+        var selectedMethod = "";
+        var currentBasePrice = 0;
+        var selectedTierName = "";
+
+        function getTierStyle(tierName) {
+            const styles = {
+                'Rajawali': { bg: 'bg-blue-600', lightBg: 'bg-blue-50', border: 'border-blue-100', lightBorder: 'border-blue-300', gradient: 'from-blue-400 to-blue-700', icon: 'fa-dove' },
+                'Gryphon': { bg: 'bg-orange-500', lightBg: 'bg-orange-50', border: 'border-orange-100', lightBorder: 'border-orange-200', gradient: 'from-orange-400 to-orange-600', icon: 'fa-dragon' },
+                'Phoenix': { bg: 'bg-red-600', lightBg: 'bg-red-50', border: 'border-red-100', lightBorder: 'border-red-300', gradient: 'from-red-500 to-red-800', icon: 'fa-fire' }
+            };
+            return styles[tierName] || { bg: 'bg-purple-600', lightBg: 'bg-purple-50', border: 'border-purple-100', lightBorder: 'border-purple-300', gradient: 'from-purple-400 to-purple-700', icon: 'fa-crown' };
+        }
+
+        function lihatCaraBayar() {
+            const loading = document.getElementById('loadingOverlay');
+            loading.classList.remove('hidden');
+            setTimeout(() => { window.location.href = 'info.html'; }, 2000);
+        }
+
+        function prosesBayar(paket, price) {
+            selectedTierName = paket;
+            currentBasePrice = price;
+            
+            const modal = document.getElementById('paymentModal');
+            const header = document.getElementById('modalHeader');
+            const subCard = document.getElementById('modalSubCard');
+            const iconBox = document.getElementById('modalIcon');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const label = document.getElementById('modalLevelLabel');
+            const priceEl = document.getElementById('modalLevelPrice');
+            const iconImg = iconBox.querySelector('i');
+
+            document.getElementById('ewalletList').classList.add('hidden');
+            document.getElementById('mbankingList').classList.add('hidden');
+            document.getElementById('billingSummary').classList.add('hidden');
+            selectedMethod = "";
+
+            label.innerText = "Level " + paket;
+            priceEl.innerText = "Rp " + price.toLocaleString();
+
+            const style = getTierStyle(paket);
+
+            header.className = `py-5 text-center text-white font-bold text-lg shadow-md ${style.bg}`;
+            subCard.className = `border-2 ${style.border} ${style.lightBg} rounded-3xl p-4 flex items-center gap-4 mb-6`;
+            iconBox.className = `w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg ${style.bg} border-4 ${style.lightBorder}`;
+            confirmBtn.className = `flex-1 ${style.bg} text-white py-3 rounded-2xl font-bold shadow-lg active:scale-95 transition`;
+            iconImg.className = `fas ${style.icon} text-2xl`;
+
+            modal.classList.remove('hidden');
+        }
+
+        function showPaymentList(listId) {
+            document.getElementById('ewalletList').classList.add('hidden');
+            document.getElementById('mbankingList').classList.add('hidden');
+            document.getElementById(listId).classList.remove('hidden');
+        }
+
+        function selectMethod(nama) {
+            selectedMethod = nama;
+            const items = document.querySelectorAll('.payment-item');
+            items.forEach(item => item.style.borderColor = "#e5e7eb");
+            event.currentTarget.style.borderColor = "#f97316";
+
+            const summary = document.getElementById('billingSummary');
+            const billTotal = document.getElementById('billingTotal');
+            const adminFee = 2390;
+            const total = currentBasePrice + adminFee;
+            document.getElementById('billingPrice').innerText = "Rp" + currentBasePrice.toLocaleString('id-ID');
+            billTotal.innerText = "Rp" + total.toLocaleString('id-ID');
+            summary.classList.remove('hidden');
+        }
+
+        function tutupModal() { document.getElementById('paymentModal').classList.add('hidden'); }
+
+        function startTimer(duration, display) {
+            let timer = duration, hours, minutes, seconds;
+            setInterval(function () {
+                hours = parseInt(timer / 3600, 10); minutes = parseInt((timer % 3600) / 60, 10); seconds = parseInt(timer % 60, 10);
+                hours = hours < 10 ? "0" + hours : hours; minutes = minutes < 10 ? "0" + minutes : minutes; seconds = seconds < 10 ? "0" + seconds : seconds;
+                display.textContent = hours + ":" + minutes + ":" + seconds;
+                if (--timer < 0) { timer = 0; display.textContent = "EXPIRED"; }
+            }, 1000);
+        }
+
+        function konfirmasiBayar() {
+            if(selectedMethod === "") { alert("Silahkan pilih metode pembayaran terlebih dahulu!"); return; }
+            
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('paymentModal').classList.add('hidden');
+
+            if (typeof window.saveUpgradeRequest === 'function') {
+                window.saveUpgradeRequest();
+            }
+
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('finalTotal').innerText = document.getElementById('billingTotal').innerText;
+                document.getElementById('finalMethod').innerText = selectedMethod;
+                document.getElementById('invoiceScreen').classList.remove('hidden');
+                const twentyFourHours = 24 * 60 * 60;
+                startTimer(twentyFourHours, document.querySelector('#timer'));
+            }, 2000);
+        }
+
+        function lihatHitungan(paket) { window.location.href = 'perhitungan.html'; }
+    </script>
+
+    <!-- FIREBASE MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgNKaGKhvNx34CK2N8r979Y1WSrfBqh48",
+            authDomain: "bird-money-85873.firebaseapp.com",
+            databaseURL: "https://bird-money-85873-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "bird-money-85873",
+            storageBucket: "bird-money-85873.appspot.com",
+            messagingSenderId: "147773799872",
+            appId: "1:147773799872:web:3922142ffedbae9f0d1c25"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) currentUser = user;
+            else window.location.href = "index.html";
+        });
+
+        function loadTiers() {
+            const tierRef = ref(db, 'tiers');
+            onValue(tierRef, (snapshot) => {
+                const container = document.getElementById('tier-container');
+                container.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // Convert to array and sort by 'order'
+                    const sortedTiers = Object.entries(data).sort((a, b) => {
+                        const orderA = a[1].order || 0;
+                        const orderB = b[1].order || 0;
+                        return orderA - orderB;
+                    });
+
+                    sortedTiers.forEach(([name, details]) => {
+                        if (name === 'Free' && details.price === 0) return; 
+
+                        const style = getTierStyle(name);
+                        const price = details.price || 0;
+                        const reward = details.reward || 0;
+                        const quota = details.quota || 0;
+
+                        const cardHTML = `
+                            <div class="card-container p-5 shadow-xl ${name === 'Phoenix' ? 'border-2 border-red-400' : ''}">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-20 h-20 ${style.bg} rounded-full flex items-center justify-center border-4 ${style.lightBorder} shadow-inner">
+                                        <i class="fas ${style.icon} text-white text-3xl"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h2 class="text-2xl font-bold text-gray-800">${name}</h2>
+                                        <div class="${style.bg} text-white text-2xl font-black py-1 px-4 rounded-r-full -ml-4 mt-1">Rp ${price.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 mb-4 text-sm font-medium text-gray-700">
+                                    <div class="flex items-center gap-2"><i class="fas fa-check-circle text-green-500"></i> Hadiah ${reward.toLocaleString()} Koin / Level</div>
+                                    <div class="flex items-center gap-2"><i class="fas fa-check-circle text-green-500"></i> Total Jatah Level ${quota.toLocaleString()} Level</div>
+                                </div>
+                                <button onclick="prosesBayar('${name}', ${price})" class="w-full bg-gradient-to-b ${style.gradient} text-white font-bold py-3 rounded-xl shadow-lg mb-2 active:scale-95 transition">
+                                    <i class="fas fa-money-bill-wave mr-2"></i> Bayar Sekarang
+                                </button>
+                                <button onclick="lihatHitungan('${name}')" class="w-full btn-calculation font-bold py-2 rounded-xl shadow shadow-inner active:scale-95 transition">
+                                    <i class="fas fa-calculator mr-2"></i> Perhitungannya
+                                </button>
+                            </div>
+                        `;
+                        container.innerHTML += cardHTML;
+                    });
+                } else {
+                    container.innerHTML = '<p class="text-center text-white">Tidak ada paket tersedia.</p>';
+                }
+            });
+        }
+
+        window.saveUpgradeRequest = async function() {
+            if (!currentUser || !selectedTierName) {
+                console.log("Menunggu data user...");
+                return;
+            }
+
+            try {
+                const requestRef = push(ref(db, 'upgradeRequests'));
+                await set(requestRef, {
+                    userId: currentUser.uid,
+                    userName: currentUser.displayName || currentUser.email,
+                    requestedTier: selectedTierName,
+                    method: selectedMethod,
+                    proofUrl: "Pembayaran Manual (Tanpa Bukti Upload)",
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
+                console.log("Permintaan upgrade terkirim!");
+            } catch (error) {
+                console.error("Gagal menyimpan permintaan:", error);
+            }
+        }
+
+        loadTiers();
+    </script>
+</body>
+</html>

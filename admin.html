@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Bird Money</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0f0f1a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #252542;
+            --accent: #f97316;
+        }
+        body { background: var(--bg-dark); min-height: 100vh; }
+        .sidebar { background: var(--bg-card); border-right: 1px solid rgba(249, 115, 22, 0.2); }
+        .sidebar-item { transition: all 0.3s ease; border-left: 3px solid transparent; }
+        .sidebar-item:hover, .sidebar-item.active { background: rgba(249, 115, 22, 0.1); border-left-color: var(--accent); }
+        .stat-card { background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-hover) 100%); border: 1px solid rgba(249, 115, 22, 0.2); }
+        .data-table { background: var(--bg-card); }
+        .data-row { border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s; }
+        .data-row:hover { background: rgba(249, 115, 22, 0.05); }
+        .btn-action { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+        .input-admin { background: var(--bg-dark); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .input-admin:focus { border-color: var(--accent); outline: none; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+    </style>
+</head>
+<body class="text-white font-sans antialiased">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 fixed h-full overflow-y-auto z-50">
+            <div class="p-6 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-orange-500 to-yellow-500 flex items-center justify-center">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg">Bird Money</h1>
+                        <p class="text-xs opacity-60">Admin Panel</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-2">
+                <div class="sidebar-item active rounded-lg p-3 cursor-pointer flex items-center gap-3" onclick="showSection('dashboard')">
+                    <i class="fas fa-chart-pie w-5"></i><span>Dashboard</span>
+                </div>
+                <div class="sidebar-item rounded-lg p-3 cursor-pointer flex items-center gap-3" onclick="showSection('users')">
+                    <i class="fas fa-users w-5"></i><span>Manajemen User</span>
+                </div>
+                <div class="sidebar-item rounded-lg p-3 cursor-pointer flex items-center gap-3" onclick="showSection('upgrades')">
+                    <i class="fas fa-level-up-alt w-5"></i><span>Permintaan Upgrade</span>
+                </div>
+                <div class="sidebar-item rounded-lg p-3 cursor-pointer flex items-center gap-3" onclick="showSection('withdrawals')">
+                    <i class="fas fa-money-bill-wave w-5"></i><span>Penarikan</span>
+                </div>
+                <div class="sidebar-item rounded-lg p-3 cursor-pointer flex items-center gap-3" onclick="showSection('levels')">
+                    <i class="fas fa-layer-group w-5"></i><span>Level & Koin</span>
+                </div>
+                <div class="sidebar-item rounded-lg p-3 cursor-pointer flex items-center gap-3" onclick="showSection('settings')">
+                    <i class="fas fa-cog w-5"></i><span>Pengaturan</span>
+                </div>
+            </nav>
+
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-sm" id="admin-name">Admin</p>
+                        <p class="text-xs opacity-60">Super Admin</p>
+                    </div>
+                </div>
+                <button onclick="adminLogout()" class="w-full bg-red-500/20 text-red-400 py-2 rounded-lg text-sm font-bold hover:bg-red-500/30 transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Keluar
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 ml-64 p-8">
+            <!-- Dashboard Section -->
+            <section id="section-dashboard" class="content-section active">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 class="text-2xl font-bold">Dashboard</h1>
+                        <p class="opacity-60">Selamat datang di Admin Panel</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                                <i class="fas fa-users text-blue-400 text-xl"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold" id="stat-users">0</p>
+                        <p class="text-sm opacity-60">Total Users</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                                <i class="fas fa-coins text-yellow-400 text-xl"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold" id="stat-coins">0</p>
+                        <p class="text-sm opacity-60">Total Koin Beredar</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                                <i class="fas fa-layer-group text-orange-400 text-xl"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold" id="stat-levels">0</p>
+                        <p class="text-sm opacity-60">Total Level User</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                                <i class="fas fa-money-bill text-red-400 text-xl"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold" id="stat-pending">0</p>
+                        <p class="text-sm opacity-60">Penarikan Pending</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="section-users" class="content-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-2xl font-bold">Manajemen User</h1>
+                    <div class="flex gap-3">
+                        <input type="text" id="search-user" placeholder="Cari user..." class="input-admin px-4 py-2 rounded-xl w-64" oninput="searchUsers()">
+                        <button onclick="exportUsers()" class="bg-green-500 px-4 py-2 rounded-xl font-bold hover:bg-green-600 transition">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+                <div class="data-table rounded-2xl overflow-hidden">
+                    <div class="grid grid-cols-12 gap-4 p-4 bg-orange-500/20 font-bold text-sm">
+                        <div class="col-span-1">No</div>
+                        <div class="col-span-3">User</div>
+                        <div class="col-span-2">Email</div>
+                        <div class="col-span-1">Level</div>
+                        <div class="col-span-2">Koin</div>
+                        <div class="col-span-1">Tier</div>
+                        <div class="col-span-2">Aksi</div>
+                    </div>
+                    <div id="users-list" class="max-h-[600px] overflow-y-auto"></div>
+                </div>
+            </section>
+
+            <!-- Upgrade Requests Section -->
+            <section id="section-upgrades" class="content-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-2xl font-bold">Permintaan Upgrade Tier</h1>
+                </div>
+                <div class="data-table rounded-2xl overflow-hidden">
+                    <div class="grid grid-cols-12 gap-4 p-4 bg-orange-500/20 font-bold text-sm">
+                        <div class="col-span-1">No</div>
+                        <div class="col-span-3">User</div>
+                        <div class="col-span-2">Tier Diminta</div>
+                        <div class="col-span-2">Bukti</div>
+                        <div class="col-span-2">Status</div>
+                        <div class="col-span-2">Aksi</div>
+                    </div>
+                    <div id="upgrades-list" class="max-h-[600px] overflow-y-auto"></div>
+                </div>
+            </section>
+
+            <!-- Withdrawals Section -->
+            <section id="section-withdrawals" class="content-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-2xl font-bold">Permintaan Penarikan</h1>
+                </div>
+                <div class="data-table rounded-2xl overflow-hidden">
+                    <div class="grid grid-cols-12 gap-4 p-4 bg-orange-500/20 font-bold text-sm">
+                        <div class="col-span-1">ID</div>
+                        <div class="col-span-3">User</div>
+                        <div class="col-span-2">Jumlah</div>
+                        <div class="col-span-2">Status</div>
+                        <div class="col-span-2">Aksi</div>
+                    </div>
+                    <div id="withdrawals-list" class="max-h-[600px] overflow-y-auto"></div>
+                </div>
+            </section>
+            
+            <!-- Levels Section -->
+            <section id="section-levels" class="content-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-2xl font-bold">Manajemen Level & Koin</h1>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Card Tambah Koin Manual -->
+                    <div class="stat-card rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                                <i class="fas fa-coins text-yellow-400"></i>
+                            </div>
+                            <h3 class="font-bold text-lg">Tambah Koin Manual</h3>
+                        </div>
+                        <form onsubmit="handleManualCoin(event)" class="space-y-4">
+                            <div>
+                                <label class="text-sm opacity-60 mb-1 block">User ID</label>
+                                <input type="text" id="manual-coin-uid" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Masukkan User ID" required>
+                            </div>
+                            <div>
+                                <label class="text-sm opacity-60 mb-1 block">Jumlah Koin</label>
+                                <input type="number" id="manual-coin-amount" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Contoh: 1000 (atau -500)" required>
+                            </div>
+                            <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 py-3 rounded-xl font-bold transition">
+                                Update Saldo Koin
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Card Tambah Level Manual -->
+                    <div class="stat-card rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                                <i class="fas fa-layer-group text-blue-400"></i>
+                            </div>
+                            <h3 class="font-bold text-lg">Tambah Level Manual</h3>
+                        </div>
+                        <form onsubmit="handleManualLevel(event)" class="space-y-4">
+                            <div>
+                                <label class="text-sm opacity-60 mb-1 block">User ID</label>
+                                <input type="text" id="manual-level-uid" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Masukkan User ID" required>
+                            </div>
+                            <div>
+                                <label class="text-sm opacity-60 mb-1 block">Jumlah Level</label>
+                                <input type="number" id="manual-level-amount" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Contoh: 5" required>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 py-3 rounded-xl font-bold transition">
+                                Update Level User
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="section-settings" class="content-section">
+                <h1 class="text-2xl font-bold mb-6">Pengaturan Aplikasi</h1>
+                
+                <!-- Pengaturan Umum -->
+                <div class="stat-card rounded-2xl p-6 max-w-2xl mb-8">
+                    <h2 class="text-lg font-bold mb-4 border-b border-white/10 pb-2">Pengaturan Umum</h2>
+                    <form onsubmit="handleSaveSettings(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-sm opacity-60 mb-2 block">Bonus Referral (Koin)</label>
+                                <input type="number" id="setting-referral" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="500">
+                            </div>
+                            <div>
+                                <label class="text-sm opacity-60 mb-2 block">Minimum Penarikan (Rp)</label>
+                                <input type="number" id="setting-min-wd" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="50000">
+                            </div>
+                            <div>
+                                <label class="text-sm opacity-60 mb-2 block">Harga 1 Koin (Rp)</label>
+                                <input type="number" id="setting-coin-price" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="1000">
+                            </div>
+                            <div>
+                                <label class="text-sm opacity-60 mb-2 block">Limit Harian Mining</label>
+                                <input type="number" id="setting-mining-limit" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="100">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i> Simpan Pengaturan Umum
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Manajemen Tier -->
+                <div class="stat-card rounded-2xl p-6 max-w-5xl">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
+                        <h2 class="text-lg font-bold">Manajemen Tier & Harga</h2>
+                        <button onclick="openTierModal()" class="bg-green-500 px-4 py-2 rounded-xl font-bold text-sm hover:bg-green-600 transition">
+                            <i class="fas fa-plus mr-1"></i> Tambah Tier
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b border-white/20 text-sm opacity-70">
+                                    <th class="p-3 w-12">Urutan</th>
+                                    <th class="p-3">Nama Tier</th>
+                                    <th class="p-3">Harga (Rp)</th>
+                                    <th class="p-3">Pendapatan/Level (Koin)</th>
+                                    <th class="p-3">Bonus Telur</th>
+                                    <th class="p-3">Jatah Level</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tier-list-container">
+                                <!-- Data tier akan dimuat di sini -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Edit User -->
+    <div id="modal-edit-user" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] hidden p-6">
+        <div class="stat-card w-full max-w-lg rounded-[25px] p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold">Edit User</h2>
+                <button onclick="closeEditUserModal()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">User ID</label>
+                    <input type="text" id="edit-user-id" class="input-admin w-full px-4 py-3 rounded-xl" disabled>
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Nama</label>
+                    <input type="text" id="edit-user-name" class="input-admin w-full px-4 py-3 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Email</label>
+                    <input type="email" id="edit-user-email" class="input-admin w-full px-4 py-3 rounded-xl" disabled>
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Tier</label>
+                    <select id="edit-user-tier" class="input-admin w-full px-4 py-3 rounded-xl">
+                        <option value="Free">Free</option>
+                        <option value="Rajawali">Rajawali</option>
+                        <option value="Gryphon">Gryphon</option>
+                        <option value="Phoenix">Phoenix</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Koin</label>
+                    <input type="number" id="edit-user-coins" class="input-admin w-full px-4 py-3 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Level</label>
+                    <input type="number" id="edit-user-level" class="input-admin w-full px-4 py-3 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Telur</label>
+                    <input type="number" id="edit-user-eggs" class="input-admin w-full px-4 py-3 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Jatah Level</label>
+                    <input type="number" id="edit-user-quota" class="input-admin w-full px-4 py-3 rounded-xl">
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeEditUserModal()" class="flex-1 bg-white/10 py-3 rounded-xl font-bold hover:bg-white/20 transition">Batal</button>
+                <button onclick="saveUserEdit()" class="flex-1 bg-orange-500 py-3 rounded-xl font-bold hover:bg-orange-600 transition">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Tier -->
+    <div id="modal-edit-tier" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] hidden p-6">
+        <div class="stat-card w-full max-w-md rounded-[25px] p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold" id="modal-tier-title">Edit Tier</h2>
+                <button onclick="closeTierModal()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
+            </div>
+            <form onsubmit="saveTier(event)" class="space-y-4">
+                <input type="hidden" id="tier-original-name">
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Nama Tier</label>
+                    <input type="text" id="tier-name" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Contoh: Rajawali" required>
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Harga Upgrade (Rp)</label>
+                    <input type="number" id="tier-price" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Contoh: 35000" required>
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Pendapatan per Level (Koin)</label>
+                    <input type="number" id="tier-reward" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Contoh: 1000" required>
+                </div>
+                <!-- Input Baru untuk Telur -->
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Bonus Telur</label>
+                    <input type="number" id="tier-egg" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Contoh: 5" required>
+                </div>
+                <div>
+                    <label class="text-sm opacity-60 mb-1 block">Total Jatah Level</label>
+                    <input type="number" id="tier-quota" class="input-admin w-full px-4 py-3 rounded-xl" placeholder="Contoh: 2000" required>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="closeTierModal()" class="flex-1 bg-white/10 py-3 rounded-xl font-bold hover:bg-white/20 transition">Batal</button>
+                    <button type="submit" class="flex-1 bg-orange-500 py-3 rounded-xl font-bold hover:bg-orange-600 transition">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detail Upgrade -->
+    <div id="modal-upgrade-detail" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] hidden p-6">
+        <div class="stat-card w-full max-w-md rounded-[25px] p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold">Detail Permintaan Upgrade</h2>
+                <button onclick="closeUpgradeModal()" class="text-2xl opacity-70 hover:opacity-100">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <input type="hidden" id="upgrade-request-id">
+                <input type="hidden" id="upgrade-user-id">
+                <div class="bg-black/30 rounded-xl p-4">
+                    <p class="text-sm opacity-60">User</p>
+                    <p class="font-bold" id="upgrade-user-name">-</p>
+                </div>
+                <div class="bg-black/30 rounded-xl p-4">
+                    <p class="text-sm opacity-60">Tier Diminta</p>
+                    <p class="font-bold text-orange-400" id="upgrade-tier-target">-</p>
+                </div>
+                <div class="bg-black/30 rounded-xl p-4">
+                    <p class="text-sm opacity-60 mb-2">Bukti Pembayaran</p>
+                    <img id="upgrade-proof-img" src="" class="w-full rounded-lg cursor-pointer hover:opacity-80" onclick="window.open(this.src)">
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="rejectUpgrade()" class="flex-1 bg-red-500 py-3 rounded-xl font-bold hover:bg-red-600 transition">
+                    <i class="fas fa-times mr-2"></i>Tolak
+                </button>
+                <button onclick="approveUpgrade()" class="flex-1 bg-green-500 py-3 rounded-xl font-bold hover:bg-green-600 transition">
+                    <i class="fas fa-check mr-2"></i>Setujui
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update, set, push, remove, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgNKaGKhvNx34CK2N8r979Y1WSrfBqh48",
+            authDomain: "bird-money-85873.firebaseapp.com",
+            databaseURL: "https://bird-money-85873-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "bird-money-85873",
+            storageBucket: "bird-money-85873.appspot.com",
+            messagingSenderId: "147773799872",
+            appId: "1:147773799872:web:3922142ffedbae9f0d1c25"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let allUsers = [];
+        let allUpgrades = [];
+        let allWithdrawals = [];
+
+        // Default Tier Config
+        let tierConfig = {
+            'Free': { price: 0, reward: 500, quota: 500, order: 0, egg: 0 },
+            'Rajawali': { price: 35000, reward: 1000, quota: 2000, order: 1, egg: 5 },
+            'Gryphon': { price: 80000, reward: 2000, quota: 5000, order: 2, egg: 10 },
+            'Phoenix': { price: 160000, reward: 3000, quota: 10000, order: 3, egg: 20 }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('admin-name').innerText = user.email || 'Admin';
+                loadDashboardData();
+                loadUsers();
+                loadUpgrades();
+                loadWithdrawals();
+                loadSettings();
+                loadTiers();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        window.showSection = function(section) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-' + section).classList.add('active');
+            const items = document.querySelectorAll('.sidebar-item');
+            items.forEach(item => {
+                if(item.getAttribute('onclick').includes(`'${section}'`)) item.classList.add('active');
+            });
+        };
+
+        // --- FUNGSI LOAD DATA ---
+        function loadDashboardData() {
+            onValue(ref(db, 'users'), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const users = Object.values(data);
+                    const totalCoins = users.reduce((sum, u) => sum + (u.saldo || 0), 0);
+                    const totalLevels = users.reduce((sum, u) => sum + (u.level || 0), 0);
+                    document.getElementById('stat-users').innerText = users.length;
+                    document.getElementById('stat-coins').innerText = totalCoins.toLocaleString();
+                    document.getElementById('stat-levels').innerText = totalLevels.toLocaleString();
+                }
+            });
+            onValue(ref(db, 'withdrawals'), (snapshot) => {
+                let pendingCount = 0;
+                snapshot.forEach(userWd => {
+                    userWd.forEach(wd => {
+                        if (wd.val().status === 'pending') pendingCount++;
+                    });
+                });
+                document.getElementById('stat-pending').innerText = pendingCount;
+            });
+        }
+
+        function loadUsers() {
+            onValue(ref(db, 'users'), (snapshot) => {
+                const data = snapshot.val();
+                allUsers = [];
+                if (data) {
+                    allUsers = Object.entries(data).map(([id, user]) => ({ id, ...user }));
+                }
+                renderUsers(allUsers);
+            });
+        }
+
+        function loadUpgrades() {
+            onValue(ref(db, 'upgradeRequests'), (snapshot) => {
+                const data = snapshot.val();
+                allUpgrades = [];
+                if (data) {
+                    allUpgrades = Object.entries(data).map(([id, req]) => ({ id, ...req }));
+                }
+                renderUpgrades(allUpgrades);
+            });
+        }
+
+        function loadWithdrawals() {
+            onValue(ref(db, 'withdrawals'), (snapshot) => {
+                allWithdrawals = [];
+                snapshot.forEach(userWd => {
+                    userWd.forEach(wd => {
+                        allWithdrawals.push({ id: wd.key, userId: userWd.key, ...wd.val() });
+                    });
+                });
+                allWithdrawals.reverse();
+                renderWithdrawals(allWithdrawals);
+            });
+        }
+
+        function loadSettings() {
+            onValue(ref(db, 'settings'), (snapshot) => {
+                const data = snapshot.val() || {};
+                document.getElementById('setting-referral').value = data.referralBonus || 500;
+                document.getElementById('setting-min-wd').value = data.minWithdrawal || 50000;
+                document.getElementById('setting-coin-price').value = data.coinPrice || 1000;
+                document.getElementById('setting-mining-limit').value = data.miningLimit || 100;
+            });
+        }
+
+        // --- FUNGSI LOAD TIERS ---
+        function loadTiers() {
+            onValue(ref(db, 'tiers'), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    tierConfig = data;
+                } else {
+                    set(ref(db, 'tiers'), tierConfig);
+                }
+                renderTiers();
+                updateUserTierDropdown();
+            });
+        }
+
+        function updateUserTierDropdown() {
+            const select = document.getElementById('edit-user-tier');
+            select.innerHTML = '';
+            // Sort by order before rendering
+            const sortedTiers = Object.entries(tierConfig).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+            sortedTiers.forEach(([key, val]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.innerText = key;
+                select.appendChild(option);
+            });
+        }
+
+        // --- FUNGSI RENDER ---
+
+        function renderUsers(users) {
+            const container = document.getElementById('users-list');
+            if (users.length === 0) {
+                container.innerHTML = '<p class="text-center p-8 opacity-60">Tidak ada data user</p>';
+                return;
+            }
+            container.innerHTML = users.map((user, index) => `
+                <div class="data-row grid grid-cols-12 gap-4 p-4 items-center">
+                    <div class="col-span-1 text-sm opacity-60">${index + 1}</div>
+                    <div class="col-span-3">
+                        <p class="font-bold">${user.nama || 'No Name'}</p>
+                        <p class="text-xs opacity-60">ID: ${user.id.substring(0, 8)}...</p>
+                    </div>
+                    <div class="col-span-2 text-sm truncate">${user.email || '-'}</div>
+                    <div class="col-span-1">${user.level || 0}</div>
+                    <div class="col-span-2 text-yellow-400 font-bold">${(user.saldo || 0).toLocaleString()}</div>
+                    <div class="col-span-1">
+                        <span class="badge ${getTierColor(user.tier)}">${user.tier || 'Free'}</span>
+                    </div>
+                    <div class="col-span-2 flex gap-2">
+                        <button onclick="editUser('${user.id}')" class="btn-action bg-blue-500 hover:bg-blue-600">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="resetUser('${user.id}')" class="btn-action bg-yellow-500 hover:bg-yellow-600">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button onclick="deleteUser('${user.id}')" class="btn-action bg-red-500 hover:bg-red-600">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderUpgrades(requests) {
+            const container = document.getElementById('upgrades-list');
+            if (requests.length === 0) {
+                container.innerHTML = '<p class="text-center p-8 opacity-60">Tidak ada permintaan upgrade</p>';
+                return;
+            }
+            container.innerHTML = requests.map((req, index) => `
+                <div class="data-row grid grid-cols-12 gap-4 p-4 items-center">
+                    <div class="col-span-1 text-sm opacity-60">${index + 1}</div>
+                    <div class="col-span-3">
+                        <p class="font-bold">${req.userName || 'User'}</p>
+                        <p class="text-xs opacity-60">ID: ${req.userId.substring(0, 8)}...</p>
+                    </div>
+                    <div class="col-span-2 text-orange-400 font-bold">${req.requestedTier}</div>
+                    <div class="col-span-2">
+                        <a href="${req.proofUrl}" target="_blank" class="text-blue-400 text-xs underline">Lihat Bukti</a>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="badge ${req.status === 'approved' ? 'bg-green-500/30 text-green-400' : req.status === 'rejected' ? 'bg-red-500/30 text-red-400' : 'bg-yellow-500/30 text-yellow-400'}">
+                            ${req.status.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="col-span-2 flex gap-2">
+                        ${req.status === 'pending' ? `
+                        <button onclick="viewUpgradeDetail('${req.id}')" class="btn-action bg-blue-500 hover:bg-blue-600">
+                            <i class="fas fa-eye"></i> Proses
+                        </button>
+                        ` : '<span class="text-xs opacity-50">Selesai</span>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderWithdrawals(withdrawals) {
+            const container = document.getElementById('withdrawals-list');
+            if (withdrawals.length === 0) {
+                container.innerHTML = '<p class="text-center p-8 opacity-60">Tidak ada data penarikan</p>';
+                return;
+            }
+            container.innerHTML = withdrawals.map((wd, index) => `
+                <div class="data-row grid grid-cols-12 gap-4 p-4 items-center">
+                    <div class="col-span-1 text-sm opacity-60">${index + 1}</div>
+                    <div class="col-span-3 truncate">${wd.userId.substring(0, 10)}...</div>
+                    <div class="col-span-2 text-green-400 font-bold">Rp ${wd.amount.toLocaleString()}</div>
+                    <div class="col-span-2">
+                        <span class="badge ${wd.status === 'completed' ? 'bg-green-500/30 text-green-400' : 'bg-yellow-500/30 text-yellow-400'}">${wd.status}</span>
+                    </div>
+                    <div class="col-span-2 flex gap-2">
+                        ${wd.status === 'pending' ? `
+                        <button onclick="approveWithdrawal('${wd.id}', '${wd.userId}')" class="btn-action bg-green-500 hover:bg-green-600"><i class="fas fa-check"></i></button>
+                        <button onclick="rejectWithdrawal('${wd.id}', '${wd.userId}')" class="btn-action bg-red-500 hover:bg-red-600"><i class="fas fa-times"></i></button>
+                        ` : '-'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- FUNGSI RENDER TIERS (UPDATED WITH EGG) ---
+        function renderTiers() {
+            const container = document.getElementById('tier-list-container');
+            if (Object.keys(tierConfig).length === 0) {
+                container.innerHTML = '<tr><td colspan="7" class="text-center p-4 opacity-60">Tidak ada data tier</td></tr>';
+                return;
+            }
+
+            // Sort by order value
+            const sortedTiers = Object.entries(tierConfig).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+
+            container.innerHTML = sortedTiers.map(([name, data]) => `
+                <tr class="border-b border-white/5 hover:bg-white/5">
+                    <td class="p-3">
+                        <div class="flex flex-col gap-1">
+                            <button onclick="moveTierUp('${name}')" class="text-xs text-gray-400 hover:text-white"><i class="fas fa-chevron-up"></i></button>
+                            <button onclick="moveTierDown('${name}')" class="text-xs text-gray-400 hover:text-white"><i class="fas fa-chevron-down"></i></button>
+                        </div>
+                    </td>
+                    <td class="p-3 font-bold">${name}</td>
+                    <td class="p-3">Rp ${(data.price || 0).toLocaleString()}</td>
+                    <td class="p-3">${(data.reward || 0).toLocaleString()} Koin</td>
+                    <td class="p-3">${(data.egg || 0).toLocaleString()} Telur</td>
+                    <td class="p-3">${(data.quota || 0).toLocaleString()} Level</td>
+                    <td class="p-3 text-center">
+                        <button onclick="editTier('${name}')" class="btn-action bg-blue-500 hover:bg-blue-600 mr-1"><i class="fas fa-edit"></i></button>
+                        ${name !== 'Free' ? `<button onclick="deleteTier('${name}')" class="btn-action bg-red-500 hover:bg-red-600"><i class="fas fa-trash"></i></button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getTierColor(tier) {
+            switch(tier) {
+                case 'Rajawali': return 'bg-blue-500/30 text-blue-400';
+                case 'Gryphon': return 'bg-orange-500/30 text-orange-400';
+                case 'Phoenix': return 'bg-red-500/30 text-red-400';
+                default: return 'bg-gray-500/30 text-gray-400';
+            }
+        }
+
+        // --- FUNGSI AKSI USER ---
+        
+        window.editUser = function(uid) {
+            const user = allUsers.find(u => u.id === uid);
+            if (user) {
+                document.getElementById('edit-user-id').value = user.id;
+                document.getElementById('edit-user-name').value = user.nama || '';
+                document.getElementById('edit-user-email').value = user.email || '';
+                document.getElementById('edit-user-tier').value = user.tier || 'Free';
+                document.getElementById('edit-user-coins').value = user.saldo || 0;
+                document.getElementById('edit-user-level').value = user.level || 0;
+                document.getElementById('edit-user-eggs').value = user.egg || 0;
+                document.getElementById('edit-user-quota').value = user.levelQuota || 500;
+                document.getElementById('modal-edit-user').classList.remove('hidden');
+            }
+        };
+
+        window.closeEditUserModal = function() {
+            document.getElementById('modal-edit-user').classList.add('hidden');
+        };
+
+        window.saveUserEdit = function() {
+            const uid = document.getElementById('edit-user-id').value;
+            const newTier = document.getElementById('edit-user-tier').value;
+            const newQuota = tierConfig[newTier] ? tierConfig[newTier].quota : 500;
+
+            const updates = {
+                nama: document.getElementById('edit-user-name').value,
+                tier: newTier,
+                saldo: parseInt(document.getElementById('edit-user-coins').value) || 0,
+                level: parseInt(document.getElementById('edit-user-level').value) || 0,
+                egg: parseInt(document.getElementById('edit-user-eggs').value) || 0,
+                levelQuota: parseInt(document.getElementById('edit-user-quota').value) || newQuota
+            };
+            
+            update(ref(db, 'users/' + uid), updates).then(() => {
+                closeEditUserModal();
+                alert('User berhasil diupdate!');
+            });
+        };
+
+        window.resetUser = function(uid) {
+            if (confirm('Reset data user ini?')) {
+                update(ref(db, 'users/' + uid), { saldo: 0, level: 0, egg: 0, tier: 'Free', levelQuota: tierConfig['Free'].quota });
+            }
+        };
+
+        window.deleteUser = function(uid) {
+            if (confirm('Hapus user ini?')) {
+                remove(ref(db, 'users/' + uid));
+            }
+        };
+
+        window.searchUsers = function() {
+            const query = document.getElementById('search-user').value.toLowerCase();
+            const filtered = allUsers.filter(u => 
+                (u.nama || '').toLowerCase().includes(query) || (u.email || '').toLowerCase().includes(query)
+            );
+            renderUsers(filtered);
+        };
+
+        window.exportUsers = function() {
+            let csv = 'No,Nama,Email,Level,Koin,Tier\n';
+            allUsers.forEach((u, i) => {
+                csv += `${i+1},"${u.nama || '-'}","${u.email || '-'}",${u.level || 0},${u.saldo || 0},"${u.tier || 'Free'}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'users_bird_money.csv'; a.click();
+        };
+
+        // --- FUNGSI LEVEL & KOIN ---
+        
+        window.handleManualCoin = async function(e) {
+            e.preventDefault();
+            const uid = document.getElementById('manual-coin-uid').value;
+            const amount = parseInt(document.getElementById('manual-coin-amount').value);
+            
+            if (!uid || isNaN(amount)) return alert('Data tidak valid');
+
+            const userRef = ref(db, 'users/' + uid);
+            const snapshot = await get(userRef);
+            
+            if (!snapshot.exists()) return alert('User ID tidak ditemukan!');
+            
+            const currentSaldo = snapshot.val().saldo || 0;
+            const newSaldo = currentSaldo + amount;
+
+            await update(userRef, { saldo: newSaldo });
+            alert(`Koin berhasil diupdate! Saldo baru: ${newSaldo}`);
+            document.getElementById('manual-coin-uid').value = '';
+            document.getElementById('manual-coin-amount').value = '';
+        };
+
+        window.handleManualLevel = async function(e) {
+            e.preventDefault();
+            const uid = document.getElementById('manual-level-uid').value;
+            const amount = parseInt(document.getElementById('manual-level-amount').value);
+            
+            if (!uid || isNaN(amount)) return alert('Data tidak valid');
+
+            const userRef = ref(db, 'users/' + uid);
+            const snapshot = await get(userRef);
+            
+            if (!snapshot.exists()) return alert('User ID tidak ditemukan!');
+            
+            const currentLevel = snapshot.val().level || 0;
+            const newLevel = currentLevel + amount;
+
+            await update(userRef, { level: newLevel });
+            alert(`Level berhasil diupdate! Level baru: ${newLevel}`);
+            document.getElementById('manual-level-uid').value = '';
+            document.getElementById('manual-level-amount').value = '';
+        };
+
+        // --- FUNGSI PENGATURAN ---
+
+        window.handleSaveSettings = async function(e) {
+            e.preventDefault();
+            const settingsData = {
+                referralBonus: parseInt(document.getElementById('setting-referral').value) || 0,
+                minWithdrawal: parseInt(document.getElementById('setting-min-wd').value) || 0,
+                coinPrice: parseInt(document.getElementById('setting-coin-price').value) || 0,
+                miningLimit: parseInt(document.getElementById('setting-mining-limit').value) || 0
+            };
+
+            await set(ref(db, 'settings'), settingsData);
+            alert('Pengaturan berhasil disimpan!');
+        };
+
+        // --- FUNGSI MANAJEMEN TIER ---
+
+        window.openTierModal = function() {
+            document.getElementById('modal-tier-title').innerText = "Tambah Tier Baru";
+            document.getElementById('tier-original-name').value = "";
+            document.getElementById('tier-name').value = "";
+            document.getElementById('tier-price').value = "";
+            document.getElementById('tier-reward').value = "";
+            document.getElementById('tier-egg').value = "";
+            document.getElementById('tier-quota').value = "";
+            
+            // Pastikan input nama tidak disabled saat tambah baru
+            const nameInput = document.getElementById('tier-name');
+            nameInput.disabled = false;
+            nameInput.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            document.getElementById('modal-edit-tier').classList.remove('hidden');
+        };
+
+        window.editTier = function(name) {
+            const data = tierConfig[name];
+            if (!data) return alert('Tier tidak ditemukan');
+            
+            document.getElementById('modal-tier-title').innerText = "Edit Tier: " + name;
+            document.getElementById('tier-original-name').value = name;
+            document.getElementById('tier-name').value = name;
+            document.getElementById('tier-price').value = data.price || 0;
+            document.getElementById('tier-reward').value = data.reward || 0;
+            document.getElementById('tier-egg').value = data.egg || 0;
+            document.getElementById('tier-quota').value = data.quota || 0;
+
+            // Khusus untuk Tier Free, nama tidak bisa diubah (agar sistem aman), tapi field lain bisa diubah.
+            const nameInput = document.getElementById('tier-name');
+            if (name === 'Free') {
+                nameInput.disabled = true;
+                nameInput.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nameInput.disabled = false;
+                nameInput.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            document.getElementById('modal-edit-tier').classList.remove('hidden');
+        };
+
+        window.closeTierModal = function() {
+            document.getElementById('modal-edit-tier').classList.add('hidden');
+        };
+
+        window.saveTier = async function(e) {
+            e.preventDefault();
+            const originalName = document.getElementById('tier-original-name').value;
+            const newName = document.getElementById('tier-name').value;
+            const price = parseInt(document.getElementById('tier-price').value) || 0;
+            const reward = parseInt(document.getElementById('tier-reward').value) || 0;
+            const egg = parseInt(document.getElementById('tier-egg').value) || 0;
+            const quota = parseInt(document.getElementById('tier-quota').value) || 0;
+
+            if (!newName) return alert('Nama tier wajib diisi');
+
+            // Determine order: if new tier, put it at the end
+            let order = tierConfig[originalName] ? tierConfig[originalName].order : Object.keys(tierConfig).length;
+
+            if (originalName && originalName !== newName) {
+                await remove(ref(db, 'tiers/' + originalName));
+            }
+
+            const updates = {
+                price: price,
+                reward: reward,
+                egg: egg,
+                quota: quota,
+                order: order
+            };
+
+            await set(ref(db, 'tiers/' + newName), updates);
+            alert('Tier berhasil disimpan!');
+            closeTierModal();
+        };
+
+        window.deleteTier = async function(name) {
+            if (name === 'Free') return alert('Tier Free tidak bisa dihapus');
+            if (!confirm(`Hapus tier ${name}? Pastikan tidak ada user yang masih menggunakan tier ini.`)) return;
+            
+            await remove(ref(db, 'tiers/' + name));
+            alert('Tier berhasil dihapus');
+        };
+
+        // --- FUNGSI SORTING TIER ---
+        window.moveTierUp = async function(name) {
+            const sortedTiers = Object.entries(tierConfig).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+            const index = sortedTiers.findIndex(t => t[0] === name);
+            if (index <= 0) return; 
+
+            const currentTier = sortedTiers[index];
+            const previousTier = sortedTiers[index - 1];
+
+            const currentOrder = currentTier[1].order || index;
+            const previousOrder = previousTier[1].order || (index - 1);
+
+            const updates = {};
+            updates[`/${currentTier[0]}/order`] = previousOrder;
+            updates[`/${previousTier[0]}/order`] = currentOrder;
+
+            await update(ref(db, 'tiers'), updates);
+        };
+
+        window.moveTierDown = async function(name) {
+            const sortedTiers = Object.entries(tierConfig).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+            const index = sortedTiers.findIndex(t => t[0] === name);
+            if (index === -1 || index >= sortedTiers.length - 1) return; 
+
+            const currentTier = sortedTiers[index];
+            const nextTier = sortedTiers[index + 1];
+
+            const currentOrder = currentTier[1].order || index;
+            const nextOrder = nextTier[1].order || (index + 1);
+
+            const updates = {};
+            updates[`/${currentTier[0]}/order`] = nextOrder;
+            updates[`/${nextTier[0]}/order`] = currentOrder;
+
+            await update(ref(db, 'tiers'), updates);
+        };
+
+        // --- FUNGSI AKSI UPGRADE ---
+
+        window.viewUpgradeDetail = function(id) {
+            const req = allUpgrades.find(r => r.id === id);
+            if (req) {
+                document.getElementById('upgrade-request-id').value = req.id;
+                document.getElementById('upgrade-user-id').value = req.userId;
+                document.getElementById('upgrade-user-name').innerText = req.userName;
+                document.getElementById('upgrade-tier-target').innerText = req.requestedTier;
+                document.getElementById('upgrade-proof-img').src = req.proofUrl;
+                document.getElementById('modal-upgrade-detail').classList.remove('hidden');
+            }
+        }
+
+        window.closeUpgradeModal = function() {
+            document.getElementById('modal-upgrade-detail').classList.add('hidden');
+        }
+
+        window.approveUpgrade = async function() {
+            const reqId = document.getElementById('upgrade-request-id').value;
+            const uid = document.getElementById('upgrade-user-id').value;
+            const tier = document.getElementById('upgrade-tier-target').innerText;
+            
+            if(!confirm(`Setujui upgrade ke ${tier}?`)) return;
+
+            const tierData = tierConfig[tier] || { quota: 500 };
+
+            await update(ref(db, 'users/' + uid), {
+                tier: tier,
+                levelQuota: tierData.quota
+            });
+
+            await update(ref(db, 'upgradeRequests/' + reqId), { status: 'approved' });
+
+            closeUpgradeModal();
+            alert('Upgrade berhasil disetujui!');
+        }
+
+        window.rejectUpgrade = async function() {
+            const reqId = document.getElementById('upgrade-request-id').value;
+            if(!confirm('Tolak permintaan ini?')) return;
+            await update(ref(db, 'upgradeRequests/' + reqId), { status: 'rejected' });
+            closeUpgradeModal();
+            alert('Permintaan ditolak.');
+        }
+
+        // --- FUNGSI PENARIKAN ---
+
+        window.approveWithdrawal = async function(wid, uid) {
+            if(confirm('Setujui penarikan ini?')) {
+                await update(ref(db, `withdrawals/${uid}/${wid}`), { status: 'completed' });
+                alert('Penarikan disetujui.');
+            }
+        }
+
+        window.rejectWithdrawal = async function(wid, uid) {
+            if(confirm('Tolak penarikan? Saldo akan dikembalikan.')) {
+                await update(ref(db, `withdrawals/${uid}/${wid}`), { status: 'rejected' });
+                alert('Penarikan ditolak.');
+            }
+        }
+
+        window.adminLogout = function() {
+            signOut(auth).then(() => { window.location.href = "index.html"; });
+        };
+    </script>
+</body>
+</html>

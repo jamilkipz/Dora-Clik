@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invite - Bird Money</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #4B0082 0%, #6B21A8 50%, #7C3AED 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .referral-code {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 4px;
+        }
+        .friend-card {
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, #f36d21, #e33b2a);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 5px;
+            border-top: 2px solid rgba(255,255,255,0.2);
+            border-radius: 25px 25px 0 0;
+            z-index: 1000;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #fff;
+            flex: 1;
+        }
+        .nav-item img { width: 32px; height: 32px; margin-bottom: 2px; object-fit: contain; }
+        .nav-item span { font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            width: 30px;
+            height: 4px;
+            background: #ffeb3b;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ffeb3b;
+        }
+        .nav-item.active { position: relative; }
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+        }
+        .pulse-animation { animation: pulse-border 2s infinite; }
+    </style>
+</head>
+<body class="text-white font-sans antialiased pb-24">
+    
+    <div class="p-4 pt-6">
+        <h1 class="text-2xl font-black mb-6">Undang Teman</h1>
+
+        <div class="glass-card rounded-3xl p-6 mb-6 text-center">
+            <div class="bg-gradient-to-r from-yellow-500 to-orange-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
+                <i class="fas fa-users text-3xl"></i>
+            </div>
+            <h2 class="text-xl font-bold mb-2">Bonus Referral</h2>
+            <p class="text-sm opacity-80 mb-4">Dapatkan 1000 koin untuk setiap teman yang mendaftar menggunakan kode referral Anda</p>
+            
+            <div class="bg-black/30 rounded-2xl p-4 mb-4">
+                <p class="text-xs opacity-70 mb-2">Kode Referral Anda</p>
+                <div class="referral-code text-2xl font-bold py-3 px-6 rounded-xl inline-block pulse-animation">
+                    <span id="referral-code">LOADING</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="copyCode()" class="bg-gradient-to-r from-blue-500 to-blue-600 py-3 rounded-xl font-bold text-sm active:scale-95 transition">
+                    <i class="fas fa-copy mr-2"></i>Salin Kode
+                </button>
+                <button onclick="shareCode()" class="bg-gradient-to-r from-green-500 to-green-600 py-3 rounded-xl font-bold text-sm active:scale-95 transition">
+                    <i class="fas fa-share mr-2"></i>Bagikan
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-3xl p-5 mb-6">
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <p class="text-3xl font-black text-orange-400" id="total-invites">0</p>
+                    <p class="text-xs opacity-70">Total Undangan</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-black text-green-400" id="active-invites">0</p>
+                    <p class="text-xs opacity-70">Aktif</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-black text-yellow-400" id="total-earned">0</p>
+                    <p class="text-xs opacity-70">Koin Diperoleh</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-lg font-bold mb-4">Cara Mengundang</h2>
+        <div class="space-y-3 mb-6">
+            <div class="friend-card rounded-xl p-4 flex items-center gap-4">
+                <div class="bg-orange-500 w-10 h-10 rounded-full flex items-center justify-center font-bold">1</div>
+                <p class="text-sm">Bagikan kode referral atau link kepada teman</p>
+            </div>
+            <div class="friend-card rounded-xl p-4 flex items-center gap-4">
+                <div class="bg-orange-500 w-10 h-10 rounded-full flex items-center justify-center font-bold">2</div>
+                <p class="text-sm">Teman mendaftar dengan kode referral Anda</p>
+            </div>
+            <div class="friend-card rounded-xl p-4 flex items-center gap-4">
+                <div class="bg-orange-500 w-10 h-10 rounded-full flex items-center justify-center font-bold">3</div>
+                <p class="text-sm">Anda dan teman mendapat 1000 koin bonus</p>
+            </div>
+        </div>
+
+        <h2 class="text-lg font-bold mb-4">Teman yang Diundang</h2>
+        <div id="friends-list" class="space-y-3">
+            <!-- Friends will be loaded here -->
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item">
+            <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" alt="Home">
+            <span>Home</span>
+        </a>
+        <a href="Tugas.html" class="nav-item">
+            <img src="https://cdn-icons-png.flaticon.com/512/2645/2645850.png" alt="Tugas">
+            <span>Tugas</span>
+        </a>
+        <a href="invite.html" class="nav-item active">
+            <img src="https://cdn-icons-png.flaticon.com/512/2583/2583158.png" alt="Invite">
+            <span>Invite</span>
+        </a>
+        <a href="withdraw.html" class="nav-item">
+            <img src="https://cdn-icons-png.flaticon.com/512/2489/2489756.png" alt="Tarik">
+            <span>Tarik</span>
+        </a>
+        <a href="profil.html" class="nav-item">
+            <img src="https://cdn-icons-png.flaticon.com/512/3033/3033143.png" alt="Profil">
+            <span>Profil</span>
+        </a>
+    </nav>
+
+    <div id="modal-copied" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] hidden p-6">
+        <div class="bg-gradient-to-br from-green-500 to-green-600 w-full max-w-xs rounded-[35px] p-8 text-center shadow-2xl">
+            <div class="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-white text-3xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2">Kode Disalin!</h2>
+            <p class="text-sm opacity-90">Kode referral telah disalin ke clipboard</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgNKaGKhvNx34CK2N8r979Y1WSrfBqh48",
+            authDomain: "bird-money-85873.firebaseapp.com",
+            databaseURL: "https://bird-money-85873-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "bird-money-85873",
+            storageBucket: "bird-money-85873.appspot.com",
+            messagingSenderId: "147773799872",
+            appId: "1:147773799872:web:3922142ffedbae9f0d1c25"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                const code = user.uid.substring(0, 8).toUpperCase();
+                document.getElementById('referral-code').innerText = code;
+                
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        document.getElementById('total-invites').innerText = data.totalInvites || 0;
+                        document.getElementById('active-invites').innerText = data.activeInvites || 0;
+                        document.getElementById('total-earned').innerText = data.referralEarnings || 0;
+                        loadFriends(data.invitedFriends || []);
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        function loadFriends(friends) {
+            const container = document.getElementById('friends-list');
+            if (friends.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 opacity-60">
+                        <i class="fas fa-user-friends text-4xl mb-3"></i>
+                        <p>Belum ada teman yang diundang</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = friends.map((friend, index) => `
+                <div class="friend-card rounded-xl p-4 flex items-center gap-4">
+                    <div class="bg-gradient-to-r from-orange-500 to-yellow-500 w-12 h-12 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold">${friend.name}</p>
+                        <p class="text-xs opacity-70">${friend.date}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-yellow-400 font-bold text-sm">+1000</p>
+                        <p class="text-xs opacity-70">Koin</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.copyCode = function() {
+            const code = document.getElementById('referral-code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                document.getElementById('modal-copied').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('modal-copied').classList.add('hidden');
+                }, 1500);
+            });
+        };
+
+        window.shareCode = function() {
+            const code = document.getElementById('referral-code').innerText;
+            const text = `Gabung Bird Money dan dapatkan uang! Gunakan kode referral saya: ${code}`;
+            if (navigator.share) {
+                navigator.share({ title: 'Bird Money', text: text });
+            } else {
+                navigator.clipboard.writeText(text);
+                alert('Link berhasil disalin!');
+            }
+        };
+    </script>
+</body>
+</html>

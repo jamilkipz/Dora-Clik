@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cara Bayar</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a1a1a; /* Background luar gelap */
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background: linear-gradient(to bottom, #f39c12, #f9ebae);
+            width: 100%;
+            max-width: 450px;
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            color: #5d4037; /* Warna teks kecokelatan */
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #d35400;
+        }
+
+        .close-btn {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        ol {
+            padding-left: 0;
+            list-style: none;
+        }
+
+        ol li {
+            margin-bottom: 12px;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .highlight-bca {
+            color: #b33939;
+            font-weight: bold;
+        }
+
+        .highlight-price {
+            color: #c0392b;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .img-guide {
+            width: 85%;
+            margin: 10px auto;
+            display: block;
+            border-radius: 12px;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-confirm {
+            display: block;
+            width: 80%;
+            background: linear-gradient(to right, #f39c12, #e67e22);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin: 25px auto;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-confirm span {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Lihat Cara Bayarnya</h2>
+        <button class="close-btn">×</button>
+    </div>
+
+    <ol>
+        <li>1. Download QRIS nya dulu</li>
+        <li>2. Buka aplikasi <span class="highlight-bca">BCA Mobile</span> anda</li>
+        <li>3. Pilih Pay / Bayar dengan QRIS</li>
+        
+        <img src="https://via.placeholder.com/350x100?text=Ikon+Menu+Pay+BCA" alt="Step 3" class="img-guide">
+
+        <li>4. Scan Qris / Upload dari galeri</li>
+        
+        <img src="https://via.placeholder.com/350x150?text=Interface+Scan+QRIS" alt="Step 4" class="img-guide">
+
+        <li>5. Masukkan nominal <span class="highlight-price">Rp37.682</span></li>
+        <li>6. Pastikan Atas nama : <strong>MT Style</strong></li>
+        <li>7. Lakukan pembayaran sampai transaksi selesai</li>
+        <li>8. Setelah pembayaran berhasil, klik tombol "Saya sudah bayar" di bawah</li>
+    </ol>
+
+    <a href="#" class="btn-confirm">
+        <span>✓</span> Saya Sudah Bayar
+    </a>
+
+    <p style="text-align: center; font-size: 15px;">
+        9. Upload bukti pembayaran untuk verifikasi
+    </p>
+</div>
+
+</body>
+</html>
